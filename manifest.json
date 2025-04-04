@@ -1,0 +1,14 @@
+{
+    "manifest_version": 3,
+    "name": "Labeling Booster",
+    "version": "1.0",
+    "description": "Autocomplete + quick paste for text labeling",
+    "permissions": ["storage", "activeTab", "scripting"],
+    "host_permissions": ["<all_urls>"],
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ]
+  }
