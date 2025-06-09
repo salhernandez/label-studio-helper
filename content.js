@@ -23,6 +23,7 @@
       input.placeholder = 'Type or select...';
       input.style.padding = '6px';
       input.style.width = '100%';
+      input.style.color = 'black';
       helperUI.appendChild(input);
   
       const list = document.createElement('ul');
@@ -32,11 +33,12 @@
       list.style.maxHeight = '200px';
       list.style.minHeight = '160px';
       list.style.overflowY = 'auto';
+      list.style.color = 'black';
       helperUI.style.width = `${20 * 8}px`; // ~20 characters assuming 8px average width
       helperUI.appendChild(list);
-  
-      chrome.storage.local.get(['entries'], result => {
-        fullEntryList = result.entries || [];
+
+      chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
+        fullEntryList = response.entries || [];
         updateList(list, fullEntryList, input, targetEl);
       });
   
@@ -70,18 +72,22 @@
             insertIntoField(targetEl, value);
             helperUI.remove();
             helperUI = null;
+            targetEl.focus();
           } else {
             const value = input.value.trim();
             if (!value) return;
-            chrome.storage.local.get(['entries'], result => {
-              const entries = result.entries || [];
+            chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
+              const entries = response.entries || [];
               if (!entries.includes(value)) {
                 entries.unshift(value);
-                chrome.storage.local.set({ entries });
+                chrome.runtime.sendMessage({ type: 'setEntries', entries }, () => {
+                  // Optionally handle response
+                });
               }
               insertIntoField(targetEl, value);
               helperUI.remove();
               helperUI = null;
+              targetEl.focus();
             });
           }
         } else if (e.key === 'Escape') {
@@ -147,4 +153,3 @@
       }
     });
   })();
-  
