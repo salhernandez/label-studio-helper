@@ -44,7 +44,42 @@
   
       input.addEventListener('input', () => {
         const search = input.value.trim().toLowerCase();
-        const filtered = fullEntryList.filter(e => e.toLowerCase().includes(search));
+        // Use advanced filtering logic from options.js
+
+        // Dupe
+        function getFilteredEntries(entries, searchQuery) {
+          if (!searchQuery.trim()) return entries;
+
+          const directMatches = [];
+          const partialMatches = [];
+
+          const lowerQuery = searchQuery.toLowerCase();
+
+          entries.forEach(entry => {
+            const lowerEntry = entry.toLowerCase();
+
+            if (lowerEntry === lowerQuery) {
+              directMatches.push(entry);
+            } else if (lowerEntry.includes(lowerQuery)) {
+              partialMatches.push(entry);
+            }
+          });
+
+          partialMatches.sort((a, b) => {
+            const lenDiff = a.length - b.length;
+            if (lenDiff !== 0) return lenDiff;
+
+            const aIsLower = /^[a-z]/.test(a);
+            const bIsLower = /^[a-z]/.test(b);
+            if (aIsLower && !bIsLower) return -1;
+            if (!aIsLower && bIsLower) return 1;
+
+            return a.localeCompare(b);
+          });
+
+          return [...directMatches, ...partialMatches];
+        }
+        const filtered = getFilteredEntries(fullEntryList, input.value);
         updateList(list, filtered, input, targetEl);
       });
   
