@@ -151,6 +151,10 @@
     function highlightItem(items) {
       items.forEach((el, i) => {
         el.style.backgroundColor = i === selectedIndex ? '#def' : '';
+        if (i === selectedIndex) {
+          // Ensure the selected item is visible in the scrollable list
+          el.scrollIntoView({ block: 'nearest' });
+        }
       });
     }
   
