@@ -34,7 +34,7 @@
       list.style.minHeight = '160px';
       list.style.overflowY = 'auto';
       list.style.color = 'black';
-      helperUI.style.width = `${20 * 8}px`; // ~20 characters assuming 8px average width
+      helperUI.style.width = `${30 * 8}px`; // ~30 characters assuming 8px average width
       helperUI.appendChild(list);
 
       chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
