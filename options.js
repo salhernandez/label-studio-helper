@@ -147,4 +147,54 @@ document.addEventListener('DOMContentLoaded', () => {
     searchQuery = e.target.value;
     renderEntries();
   });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const dataStr = JSON.stringify(entries, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'entries.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').value = '';
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const append = document.getElementById('importAppendCheckbox').checked;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const imported = JSON.parse(evt.target.result);
+        if (Array.isArray(imported)) {
+          if (append) {
+            // Append, avoiding duplicates (case-sensitive)
+            const existingSet = new Set(entries);
+            imported.forEach(word => {
+              if (!existingSet.has(word)) {
+                entries.push(word);
+                existingSet.add(word);
+              }
+            });
+          } else {
+            entries = imported;
+          }
+          saveEntries();
+          document.getElementById('importStatus').textContent = 'Import successful!';
+        } else {
+          document.getElementById('importStatus').textContent = 'Invalid JSON format.';
+        }
+      } catch {
+        document.getElementById('importStatus').textContent = 'Failed to parse JSON.';
+      }
+      setTimeout(() => document.getElementById('importStatus').textContent = '', 3000);
+    };
+    reader.readAsText(file);
+  });
 });

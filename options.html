@@ -22,6 +22,18 @@
     <!-- Bulk Delete -->
     <button id="bulkDeleteBtn" class="btn btn-danger mb-3 d-none">Delete Selected</button>
 
+    <!-- Export/Import Controls -->
+    <div class="d-flex gap-2 mb-3">
+      <button id="exportBtn" class="btn btn-outline-primary btn-sm">Export as JSON</button>
+      <button id="importBtn" class="btn btn-outline-secondary btn-sm">Import from JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <div class="form-check form-check-inline align-self-center">
+        <input class="form-check-input" type="checkbox" id="importAppendCheckbox" checked>
+        <label class="form-check-label" for="importAppendCheckbox">Append to existing list</label>
+      </div>
+    </div>
+    <div id="importStatus" class="text-success small"></div>
+
     <!-- Word List -->
     <ul id="entryList" class="list-group"></ul>
   </div>
