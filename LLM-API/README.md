@@ -1,0 +1,6 @@
+- Build image
+    - `docker build -t llm_api:"1.0.0"`
+- Run for production
+    - `docker run --name llm_api_prod -d -p 3000:3000 llm_api:1.0.0`
+- Run in dev mode
+    - `docker run -it --rm -p 3000:3000 -v "$(pwd)/app":/app -v /app/node_modules llm_api:1.0.0`
