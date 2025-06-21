@@ -8,17 +8,18 @@ const sharp = require('sharp');
 app.use(express.json());
 
 app.post('/transcribe', (req, res) => {
-  const { x, y, width, height } = req.body;
+  const { x, y, width, height, taskNumber } = req.body;
   if (
     typeof x !== 'number' ||
     typeof y !== 'number' ||
     typeof width !== 'number' ||
-    typeof height !== 'number'
+    typeof height !== 'number' ||
+    typeof taskNumber !== 'number'
   ) {
     return res.status(400).json({ error: 'x, y, w, and h must be numbers' });
   }
 
-  examplePromise(x, y, width, height).then((result) => {
+  examplePromise(x, y, width, height, taskNumber).then((result) => {
     // Handle the result from the promise here
     res.json(JSON.parse(result.response)); // Send the result back to the client 
   })
@@ -35,7 +36,7 @@ app.listen(PORT, () => {
   console.log(`LLM-API listening on port ${PORT}`);
 });
 
-function examplePromise(x, y, w, h) {
+function examplePromise(x, y, w, h, taskNumber) {
   return new Promise((resolve, reject) => {
     // Your asynchronous logic here
     // Call resolve(result) on success, or reject(error) on failure
@@ -43,7 +44,7 @@ function examplePromise(x, y, w, h) {
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'http://192.168.1.131:8090/api/tasks/1',
+      url: `http://192.168.1.131:8090/api/tasks/${taskNumber}`,
       headers: {
         'Authorization': 'Token d37e5cb1dbabc8ea06423803e120ad78e3bf2304',
         'Cookie': 'sessionid=eyJ1aWQiOiJiNjAwZDcxMi1hNWZlLTQyNTEtOWQxZC00OTk3NzJkYTlkYjYiLCJvcmdhbml6YXRpb25fcGsiOjF9:1uSWH3:Hm7W-IbmpKbwMZjR-53n7XBL2p9d4IQ6bHBXEXvI7iU'
