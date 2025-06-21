@@ -52,14 +52,40 @@ function examplePromise(x, y, w, h) {
         downloadedFilePath = path.join(__dirname, 'downloads', response.data.file_upload);
 
         downloadImage(`http://192.168.1.131:8090${response.data.data.image}`, downloadedFilePath)
-          .then(() => {
+          .then(async () => {
+
+            let base64ImageString;
             console.log('Image downloaded successfully');
 
             croppedImagePath = path.join(__dirname, 'downloads', 'cropped_image.png');
-            snapshotImageArea(downloadedFilePath, croppedImagePath, x, y, w, h)
-            
-            
-            // cropWithFloat(downloadedFilePath, { x, y, width: w, height: h }, path.join(__dirname, 'downloads', 'cropped_image.png'))
+            await snapshotImageArea(downloadedFilePath, croppedImagePath, x, y, w, h)
+
+            // convert image to base64
+            await imageToBase64(croppedImagePath)
+              .then(base64Image => {
+                // console.log("Base64 Image String: ", base64Image);
+                // make call to ollama to get translation
+                base64ImageString = base64Image;
+              })
+              .catch(err => {
+                console.error("Error converting image to base64:", err);
+                reject(err);
+              });
+
+            // Send the base64 image as string to ollama
+
+
+            sendImageToVisionModel("http://192.168.1.123:11434/api/generate", base64ImageString)
+              .then((response) => {
+                console.log("Response from vision model:", response);
+                // Process the response as needed
+                // resolve(response);
+              })
+              .catch((error) => {
+                console.error("Error from vision model:", error);
+                // reject(error);
+              });
+
             resolve(response.data);
           })
           .catch((error) => {
@@ -79,8 +105,8 @@ async function downloadImage(url, outputPath) {
     url: url,
     responseType: 'stream',
     headers: {
-        'Authorization': 'Token d37e5cb1dbabc8ea06423803e120ad78e3bf2304',
-      }
+      'Authorization': 'Token d37e5cb1dbabc8ea06423803e120ad78e3bf2304',
+    }
   });
 
   return new Promise((resolve, reject) => {
@@ -120,3 +146,41 @@ async function snapshotImageArea(inputPath, outputPath, x, y, w, h) {
 
   console.log("Snapshot saved to", outputPath);
 }
+
+/**
+ * Reads an image file and returns its base64-encoded string.
+ * @param {string} imagePath - Path to the image file.
+ * @returns {Promise<string>} - Base64 string of the image.
+ */
+function imageToBase64(imagePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(imagePath, (err, data) => {
+      if (err) return reject(err);
+      const base64 = data.toString('base64');
+      resolve(base64);
+    });
+  });
+}
+
+/**
+ * Sends a POST request to an external vision model API with a base64 image string.
+ * @param {string} apiUrl - The URL of the external vision model API.
+ * @param {string} base64Image - The base64-encoded image string.
+ * @param {object} [extraPayload={}] - Any extra fields to include in the payload.
+ * @returns {Promise<object>} - Resolves with the API response data.
+ */
+function sendImageToVisionModel(apiUrl, base64Image) {
+  return axios.post(apiUrl, {
+    "model": "llama3.2-vision:latest",
+    "prompt": "Transcribe. Only provide the transcription. No comments. Output is a JSON object that has 'transcription' as its only key. The value is the transcription.",
+    "format": "json",
+    "stream": false,
+    "images": [base64Image]
+  })
+    .then(response => response.data)
+    .catch(error => {
+      // Optionally, you can log or process the error here
+      throw error;
+    });
+}
+
