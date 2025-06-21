@@ -37,6 +37,12 @@
       helperUI.style.width = `${30 * 8}px`; // ~30 characters assuming 8px average width
       helperUI.appendChild(list);
 
+      // Request entries before API call and loading icon
+      chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
+        fullEntryList = response.entries || [];
+        updateList(list, fullEntryList, input, targetEl);
+      });
+  
       // Extract x, y, w, h from .lsf-region-editor
       let regionData = {};
       const regionEditor = document.querySelector('.lsf-region-editor');
@@ -60,7 +66,19 @@
       }
       console.log('Region Data:', regionData);
       // Request API data from background.js, sending regionData
+      // Show loading icon in input
+      input.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg width=\'20\' height=\'20\' viewBox=\'0 0 50 50\' xmlns=\'http://www.w3.org/2000/svg\'><circle cx=\'25\' cy=\'25\' r=\'20\' fill=\'none\' stroke=\'%23007bff\' stroke-width=\'5\' stroke-dasharray=\'31.4 31.4\' transform=\'rotate(-90 25 25)\'><animateTransform attributeName=\'transform\' type=\'rotate\' from=\'0 25 25\' to=\'360 25 25\' dur=\'1s\' repeatCount=\'indefinite\'/></circle></svg>")';
+      input.style.backgroundRepeat = 'no-repeat';
+      input.style.backgroundPosition = 'right 8px center';
+      input.style.backgroundSize = '20px 20px';
+      
       chrome.runtime.sendMessage({ type: 'fetchApiData', region: regionData }, apiResponse => {
+        // Remove loading icon
+        input.style.backgroundImage = '';
+        // Populate input placeholder with API response (stringified)
+        if(apiResponse){
+          input.placeholder = apiResponse.transcription;
+        }
         // You can use apiResponse.data in your UI as needed
         console.log('API Data:', apiResponse);
         // Optionally, update the UI with apiResponse.data here
@@ -111,20 +129,35 @@
         const items = list.querySelectorAll('li');
         if (e.key === 'ArrowDown') {
           e.preventDefault();
-          selectedIndex = (selectedIndex + 1) % items.length;
-          highlightItem(items);
+          if (items.length > 0) {
+            selectedIndex = (selectedIndex + 1) % items.length;
+            highlightItem(items);
+          }
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
-          selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-          highlightItem(items);
+          if (items.length > 0) {
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            highlightItem(items);
+          }
         } else if (e.key === 'Tab') {
-          e.preventDefault();
-          selectedIndex = (selectedIndex + 1) % items.length;
-          highlightItem(items);
+          // If an option is selected, populate input with that option
+          if (selectedIndex >= 0 && items[selectedIndex]) {
+            e.preventDefault();
+            const value = items[selectedIndex].textContent;
+            insertIntoField(targetEl, value);
+            helperUI.remove();
+            helperUI = null;
+            targetEl.focus();
+          } else if (input.placeholder && (!items.length || selectedIndex === -1)) {
+            // Only populate input with placeholder if there is a placeholder and no list selection
+            e.preventDefault();
+            input.value = input.placeholder;
+            input.placeholder = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         } else if (e.shiftKey && e.key === 'Tab') {
+          // Do nothing (prevent navigation)
           e.preventDefault();
-          selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-          highlightItem(items);
         } else if (e.key === 'Enter') {
           if (selectedIndex >= 0 && items[selectedIndex]) {
             const value = items[selectedIndex].textContent;
