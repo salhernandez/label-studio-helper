@@ -145,7 +145,7 @@ function renderPopupOptions() {
     chrome.storage.sync.set({ llmHelpEnabled: llmToggle.checked });
   });
   llmLabel.appendChild(llmToggle);
-  llmLabel.appendChild(document.createTextNode('Use LLM to help transcribe selected region'));
+  llmLabel.appendChild(document.createTextNode('Transcribe with LLM'));
   popupOptionsDiv.appendChild(llmLabel);
 }
 
