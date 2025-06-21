@@ -80,22 +80,28 @@
       }
       console.log('Region Data:', regionData);
       // Request API data from background.js, sending regionData
-      // Show loading icon in input
-      input.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg width=\'20\' height=\'20\' viewBox=\'0 0 50 50\' xmlns=\'http://www.w3.org/2000/svg\'><circle cx=\'25\' cy=\'25\' r=\'20\' fill=\'none\' stroke=\'%23007bff\' stroke-width=\'5\' stroke-dasharray=\'31.4 31.4\' transform=\'rotate(-90 25 25)\'><animateTransform attributeName=\'transform\' type=\'rotate\' from=\'0 25 25\' to=\'360 25 25\' dur=\'1s\' repeatCount=\'indefinite\'/></circle></svg>")';
-      input.style.backgroundRepeat = 'no-repeat';
-      input.style.backgroundPosition = 'right 8px center';
-      input.style.backgroundSize = '20px 20px';
-      
-      chrome.runtime.sendMessage({ type: 'fetchApiData', region: regionData }, apiResponse => {
-        // Remove loading icon
-        input.style.backgroundImage = '';
-        // Populate input placeholder with API response (stringified)
-        if(apiResponse){
-          input.placeholder = apiResponse.transcription;
+      // Check if LLM Help is enabled before sending API request
+      chrome.storage.sync.get(['llmHelpEnabled'], result => {
+        if (result.llmHelpEnabled === false) {
+          // LLM Help is disabled, skip API call
+          input.style.backgroundImage = '';
+          return;
         }
-        // You can use apiResponse.data in your UI as needed
-        console.log('API Data:', apiResponse);
-        // Optionally, update the UI with apiResponse.data here
+        // Show loading icon in input
+        input.style.backgroundImage = 'url("data:image/svg+xml;utf8,<svg width=\'20\' height=\'20\' viewBox=\'0 0 50 50\' xmlns=\'http://www.w3.org/2000/svg\'><circle cx=\'25\' cy=\'25\' r=\'20\' fill=\'none\' stroke=\'%23007bff\' stroke-width=\'5\' stroke-dasharray=\'31.4 31.4\' transform=\'rotate(-90 25 25)\'><animateTransform attributeName=\'transform\' type=\'rotate\' from=\'0 25 25\' to=\'360 25 25\' dur=\'1s\' repeatCount=\'indefinite\'/></circle></svg>")';
+        input.style.backgroundRepeat = 'no-repeat';
+        input.style.backgroundPosition = 'right 8px center';
+        input.style.backgroundSize = '20px 20px';
+        chrome.runtime.sendMessage({ type: 'fetchApiData', region: regionData }, apiResponse => {
+          // Remove loading icon
+          input.style.backgroundImage = '';
+          // Populate input placeholder with API response (stringified)
+          if(apiResponse){
+            input.placeholder = apiResponse.transcription;
+          }
+          // You can use apiResponse.data in your UI as needed
+          console.log('API Data:', apiResponse);
+        });
       });
   
       input.addEventListener('input', () => {

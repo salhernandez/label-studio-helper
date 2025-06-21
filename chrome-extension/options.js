@@ -124,6 +124,31 @@ function deleteSelectedEntries() {
   saveEntries();
 }
 
+function renderPopupOptions() {
+  const popupOptionsDiv = document.getElementById('popupOptions');
+  popupOptionsDiv.innerHTML = '';
+
+  // Enable/Disable LLM Help toggle
+  const llmLabel = document.createElement('label');
+  llmLabel.className = 'form-switch d-flex align-items-center gap-2 mb-3';
+  const llmToggle = document.createElement('input');
+  llmToggle.type = 'checkbox';
+  llmToggle.className = 'form-check-input';
+  llmToggle.id = 'llmHelpToggle';
+  llmToggle.checked = true;
+  chrome.storage.sync.get(['llmHelpEnabled'], result => {
+    if (typeof result.llmHelpEnabled === 'boolean') {
+      llmToggle.checked = result.llmHelpEnabled;
+    }
+  });
+  llmToggle.addEventListener('change', () => {
+    chrome.storage.sync.set({ llmHelpEnabled: llmToggle.checked });
+  });
+  llmLabel.appendChild(llmToggle);
+  llmLabel.appendChild(document.createTextNode('Use LLM to help transcribe selected region'));
+  popupOptionsDiv.appendChild(llmLabel);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
     entries = response.entries || [];
@@ -197,4 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     reader.readAsText(file);
   });
+
+  renderPopupOptions();
 });
