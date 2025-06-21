@@ -12,8 +12,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.type === 'fetchApiData') {
-    // Dummy API request (replace with real API as needed)
-    fetch('https://jsonplaceholder.typicode.com/todos/1')
+    // Use fetch to POST to the API with region data from the message
+    const region = message.region || {};
+    let data = JSON.stringify({
+      taskNumber: parseFloat(region.taskNumber),
+      x: parseFloat(region.x),
+      y: parseFloat(region.y),
+      width: parseFloat(region.w),
+      height: parseFloat(region.h)
+    });
+    console.log('Sending data to API:', data);
+    fetch('http://localhost:3000/transcribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: data
+    })
       .then(response => response.json())
       .then(data => {
         console.log('API Data:', data);

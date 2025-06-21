@@ -37,17 +37,32 @@
       helperUI.style.width = `${30 * 8}px`; // ~30 characters assuming 8px average width
       helperUI.appendChild(list);
 
-      chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
-        fullEntryList = response.entries || [];
-        updateList(list, fullEntryList, input, targetEl);
-      });
-  
-      // Request API data from background.js
-      chrome.runtime.sendMessage({ type: 'fetchApiData' }, apiResponse => {
+      // Extract x, y, w, h from .lsf-region-editor
+      let regionData = {};
+      const regionEditor = document.querySelector('.lsf-region-editor');
+      if (regionEditor) {
+        const labels = regionEditor.querySelectorAll('.lsf-region-editor__property');
+        labels.forEach(label => {
+          const input = label.querySelector('input.lsf-region-editor__input');
+          const span = label.querySelector('.lsf-region-editor__text');
+          if (input && span) {
+            const key = span.textContent.trim().toLowerCase();
+            if (["x","y","w","h"].includes(key)) {
+              regionData[key] = input.value;
+            }
+          }
+        });
+      }
+      // Also grab the current task id
+      const taskIdDiv = document.querySelector('.lsf-current-task__task-id');
+      if (taskIdDiv) {
+        regionData.taskNumber = taskIdDiv.textContent.trim();
+      }
+      console.log('Region Data:', regionData);
+      // Request API data from background.js, sending regionData
+      chrome.runtime.sendMessage({ type: 'fetchApiData', region: regionData }, apiResponse => {
         // You can use apiResponse.data in your UI as needed
-        // For demonstration, log it:
         console.log('API Data:', apiResponse);
-        // alert(`API Data: ${JSON.stringify(apiResponse)}`);
         // Optionally, update the UI with apiResponse.data here
       });
   
