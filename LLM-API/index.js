@@ -8,20 +8,26 @@ const sharp = require('sharp');
 app.use(express.json());
 
 app.post('/transcribe', (req, res) => {
-  const { x, y, w, h } = req.body;
+  const { x, y, width, height } = req.body;
   if (
     typeof x !== 'number' ||
     typeof y !== 'number' ||
-    typeof w !== 'number' ||
-    typeof h !== 'number'
+    typeof width !== 'number' ||
+    typeof height !== 'number'
   ) {
     return res.status(400).json({ error: 'x, y, w, and h must be numbers' });
   }
 
-  examplePromise(x, y, w, h);
+  examplePromise(x, y, width, height).then((result) => {
+    // Handle the result from the promise here
+    res.json(JSON.parse(result.response)); // Send the result back to the client 
+  })
+  .catch((err) => {
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  });
 
   // You can add your logic here
-  res.json({ x, y, w, h });
+  // res.json({ x, y, w, h });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -79,14 +85,14 @@ function examplePromise(x, y, w, h) {
               .then((response) => {
                 console.log("Response from vision model:", response);
                 // Process the response as needed
-                // resolve(response);
+                resolve(response);
               })
               .catch((error) => {
                 console.error("Error from vision model:", error);
-                // reject(error);
+                reject(error);
               });
 
-            resolve(response.data);
+            // resolve(response.dat);
           })
           .catch((error) => {
             console.error('Error downloading image:', error);
@@ -95,11 +101,18 @@ function examplePromise(x, y, w, h) {
       })
       .catch((error) => {
         console.log(error);
+        reject(error);
       });
   });
 }
 
 async function downloadImage(url, outputPath) {
+  // Check if file already exists
+  if (fs.existsSync(outputPath)) {
+    console.log(`File already exists at ${outputPath}, skipping download.`);
+    return Promise.resolve();
+  }
+
   const response = await axios({
     method: 'get',
     url: url,
@@ -183,4 +196,3 @@ function sendImageToVisionModel(apiUrl, base64Image) {
       throw error;
     });
 }
-
