@@ -42,6 +42,15 @@
         updateList(list, fullEntryList, input, targetEl);
       });
   
+      // Request API data from background.js
+      chrome.runtime.sendMessage({ type: 'fetchApiData' }, apiResponse => {
+        // You can use apiResponse.data in your UI as needed
+        // For demonstration, log it:
+        console.log('API Data:', apiResponse);
+        // alert(`API Data: ${JSON.stringify(apiResponse)}`);
+        // Optionally, update the UI with apiResponse.data here
+      });
+  
       input.addEventListener('input', () => {
         const search = input.value.trim().toLowerCase();
         // Use advanced filtering logic from options.js

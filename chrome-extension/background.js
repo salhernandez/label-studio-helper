@@ -11,4 +11,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+  if (message.type === 'fetchApiData') {
+    // Dummy API request (replace with real API as needed)
+    fetch('https://jsonplaceholder.typicode.com/todos/1')
+      .then(response => response.json())
+      .then(data => {
+        console.log('API Data:', data);
+        sendResponse(data);
+      })
+      .catch(error => {
+        console.error('API Error:', error);
+        sendResponse({ data: null, error: error.toString() });
+      });
+    return true; // Keep the message channel open for async response
+  }
 });
