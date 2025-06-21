@@ -25,7 +25,21 @@
       input.style.width = '100%';
       input.style.color = 'black';
       helperUI.appendChild(input);
-  
+
+      // Add 'Do not save to list' checkbox below the input
+      const dontSaveWrapper = document.createElement('label');
+      dontSaveWrapper.style.display = 'flex';
+      dontSaveWrapper.style.alignItems = 'center';
+      dontSaveWrapper.style.margin = '4px 0 0 0';
+      dontSaveWrapper.style.color = 'black';
+      const dontSaveCheckbox = document.createElement('input');
+      dontSaveCheckbox.type = 'checkbox';
+      dontSaveCheckbox.style.marginRight = '6px';
+      dontSaveWrapper.appendChild(dontSaveCheckbox);
+      dontSaveWrapper.appendChild(document.createTextNode("Don't save to list"));
+      // Insert the checkbox right after the input, before the list
+      helperUI.appendChild(dontSaveWrapper);
+
       const list = document.createElement('ul');
       list.style.listStyle = 'none';
       list.style.margin = 0;
@@ -168,11 +182,12 @@
           } else {
             const value = input.value.trim();
             if (!value) return;
+            // Always retrieve entries, but only call setEntries if checkbox is NOT checked
             chrome.runtime.sendMessage({ type: 'getEntries' }, response => {
               const entries = response.entries || [];
-              if (!entries.includes(value)) {
-                entries.unshift(value);
-                chrome.runtime.sendMessage({ type: 'setEntries', entries }, () => {
+              if (!dontSaveCheckbox.checked && !entries.includes(value)) {
+                // Only call setEntries if not already present
+                chrome.runtime.sendMessage({ type: 'setEntries', entries: entries.concat([value]) }, () => {
                   // Optionally handle response
                 });
               }
