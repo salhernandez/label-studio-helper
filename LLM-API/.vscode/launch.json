@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Launch LLM-API",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/LLM-API/index.js",
+      "program": "${workspaceFolder}/index.js",
       "console": "integratedTerminal"
     },
     {
