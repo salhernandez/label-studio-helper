@@ -98,8 +98,23 @@
           // Populate input placeholder with API response (stringified)
           if(apiResponse){
             input.placeholder = apiResponse.transcription;
+            // If the transcription exists in the list, highlight/select it
+            const items = list.querySelectorAll('li');
+            let foundIndex = -1;
+            items.forEach((li, idx) => {
+              if (li.textContent.trim() === apiResponse.transcription) {
+                foundIndex = idx;
+              }
+            });
+            if (foundIndex !== -1) {
+              selectedIndex = foundIndex;
+              highlightItem(items);
+              // Scroll the selected item to the top of the list
+              if (items[selectedIndex]) {
+                items[selectedIndex].scrollIntoView({ block: 'start' });
+              }
+            }
           }
-          // You can use apiResponse.data in your UI as needed
           console.log('API Data:', apiResponse);
         });
       });
