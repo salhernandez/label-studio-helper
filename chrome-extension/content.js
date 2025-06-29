@@ -95,8 +95,12 @@
         chrome.runtime.sendMessage({ type: 'fetchApiData', region: regionData }, apiResponse => {
           // Remove loading icon
           input.style.backgroundImage = '';
+          // Show toast if error
+          if (apiResponse && apiResponse.error) {
+            showWebToast(apiResponse.error, 'danger');
+          }
           // Populate input placeholder with API response (stringified)
-          if(apiResponse){
+          if(apiResponse && apiResponse.transcription){
             input.placeholder = apiResponse.transcription;
             // If the transcription exists in the list, highlight/select it
             const items = list.querySelectorAll('li');
@@ -274,6 +278,42 @@
     function insertIntoField(el, text) {
       el.value = text;
       el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  
+    // Show a toast notification in the webpage
+    function showWebToast(message, type = 'danger') {
+      let toastContainer = document.getElementById('lshelper-toast-container');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'lshelper-toast-container';
+        toastContainer.style.position = 'fixed';
+        toastContainer.style.top = '30px';
+        toastContainer.style.left = '50%';
+        toastContainer.style.transform = 'translateX(-50%)';
+        toastContainer.style.zIndex = '99999';
+        document.body.appendChild(toastContainer);
+      }
+      const toast = document.createElement('div');
+      toast.style.background = type === 'danger' ? '#dc3545' : '#28a745';
+      toast.style.color = 'white';
+      toast.style.padding = '12px 24px';
+      toast.style.borderRadius = '6px';
+      toast.style.marginTop = '8px';
+      toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+      toast.style.fontSize = '1rem';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.flexDirection = 'column';
+      toast.innerHTML = `
+        <span style="font-size:0.85em;opacity:0.8;margin-bottom:2px;">Label Studio Helper</span>
+        <div style="display:flex;align-items:center;width:100%">
+          <span style="flex:1">${message}</span>
+          <button style="background:none;border:none;color:white;font-size:1.2em;margin-left:12px;cursor:pointer">&times;</button>
+        </div>
+      `;
+      toast.querySelector('button').onclick = () => toast.remove();
+      toastContainer.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
     }
   
     window.addEventListener('keydown', e => {

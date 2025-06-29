@@ -7,6 +7,11 @@ const sharp = require('sharp');
 
 app.use(express.json());
 
+// Health check endpoint
+app.get('/status', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.post('/transcribe', (req, res) => {
   const { x, y, width, height, taskNumber } = req.body;
   if (
