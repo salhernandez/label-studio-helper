@@ -49,7 +49,7 @@ function examplePromise(x, y, w, h, taskNumber) {
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `http://192.168.1.131:8090/api/tasks/${taskNumber}`,
+      url: `http://192.168.1.133:8090/api/tasks/${taskNumber}`,
       headers: {
         'Authorization': 'Token ',
         'Cookie': 'sessionid='
@@ -63,7 +63,7 @@ function examplePromise(x, y, w, h, taskNumber) {
 
         downloadedFilePath = path.join(__dirname, 'downloads', response.data.file_upload);
 
-        downloadImage(`http://192.168.1.131:8090${response.data.data.image}`, downloadedFilePath)
+        downloadImage(`http://192.168.1.133:8090${response.data.data.image}`, downloadedFilePath)
           .then(async () => {
 
             let base64ImageString;
