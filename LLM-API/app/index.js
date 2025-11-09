@@ -1,9 +1,40 @@
-const express = require('express');
-const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+
+// Try to load .env from parent directory (local dev) or current directory (Docker)
+const envPath = fs.existsSync(path.join(__dirname, '..', '.env'))
+  ? path.join(__dirname, '..', '.env')
+  : path.join(__dirname, '.env');
+require('dotenv').config({ path: envPath });
+
+const express = require('express');
+const axios = require('axios');
 const app = express();
 const sharp = require('sharp');
+
+// Label Studio configuration (loaded from environment variables)
+const LABEL_STUDIO_URL = process.env.LABEL_STUDIO_URL || 'http://192.168.1.133';
+const LABEL_STUDIO_PORT = process.env.LABEL_STUDIO_PORT || '8090';
+const LABEL_STUDIO_TOKEN = process.env.LABEL_STUDIO_TOKEN || 'd37e5cb1dbabc8ea06423803e120ad78e3bf2304';
+
+// Construct the full Label Studio base URL
+const LABEL_STUDIO_BASE_URL = `${LABEL_STUDIO_URL}:${LABEL_STUDIO_PORT}`;
+
+// AI Processor configuration (loaded from environment variables)
+const AI_PROCESSOR_URL = process.env.AI_PROCESSOR_URL || 'http://192.168.1.123';
+const AI_PROCESSOR_PORT = process.env.AI_PROCESSOR_PORT || '11434';
+
+// Construct the full AI Processor API URL
+const AI_PROCESSOR_API_URL = `${AI_PROCESSOR_URL}:${AI_PROCESSOR_PORT}/api/generate`;
+
+
+// TODO: Create a console log that prints the custom environment variables
+console.log('Label Studio URL:', LABEL_STUDIO_URL);
+console.log('Label Studio Port:', LABEL_STUDIO_PORT);
+console.log('Label Studio Token:', LABEL_STUDIO_TOKEN);
+console.log('AI Processor URL:', AI_PROCESSOR_URL);
+console.log('AI Processor Port:', AI_PROCESSOR_PORT);
+console.log('AI Processor API URL:', AI_PROCESSOR_API_URL);
 
 app.use(express.json());
 
@@ -49,10 +80,9 @@ function examplePromise(x, y, w, h, taskNumber) {
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `http://192.168.1.133:8090/api/tasks/${taskNumber}`,
+      url: `${LABEL_STUDIO_BASE_URL}/api/tasks/${taskNumber}`,
       headers: {
-        'Authorization': 'Token ',
-        'Cookie': 'sessionid='
+        'Authorization': `Token ${LABEL_STUDIO_TOKEN}`
       }
     };
 
@@ -63,7 +93,7 @@ function examplePromise(x, y, w, h, taskNumber) {
 
         downloadedFilePath = path.join(__dirname, 'downloads', response.data.file_upload);
 
-        downloadImage(`http://192.168.1.133:8090${response.data.data.image}`, downloadedFilePath)
+        downloadImage(`${LABEL_STUDIO_BASE_URL}${response.data.data.image}`, downloadedFilePath)
           .then(async () => {
 
             let base64ImageString;
@@ -84,10 +114,10 @@ function examplePromise(x, y, w, h, taskNumber) {
                 reject(err);
               });
 
-            // Send the base64 image as string to ollama
+            // Send the base64 image as string to AI processor
 
 
-            sendImageToVisionModel("http://192.168.1.123:11434/api/generate", base64ImageString)
+            sendImageToVisionModel(AI_PROCESSOR_API_URL, base64ImageString)
               .then((response) => {
                 console.log("Response from vision model:", response);
                 // Process the response as needed
@@ -124,7 +154,7 @@ async function downloadImage(url, outputPath) {
     url: url,
     responseType: 'stream',
     headers: {
-      'Authorization': 'Token d37e5cb1dbabc8ea06423803e120ad78e3bf2304',
+      'Authorization': `Token ${LABEL_STUDIO_TOKEN}`
     }
   });
 
